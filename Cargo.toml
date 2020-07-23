@@ -4,6 +4,16 @@ version = "0.1.0"
 authors = ["Francesco Ceccon <francesco@ceccon.me>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+anyhow = "1.0.31"
+atty = "0.2.14"
+confy = "0.4.0"
+convey = "0.2.0"
+clap = "2.33.1"
+stellar-base = "0.4.0"
+stellar-horizon = "0.4.0"
+structopt = "0.3.0"
+thiserror = "1.0.20"
+serde = "1.0.114"
+serde_derive = "1.0.114"
+tokio = { version = "0.2.22", features = ["full"] }
