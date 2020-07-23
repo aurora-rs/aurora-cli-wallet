@@ -184,11 +184,13 @@ dependencies = [
  "convey",
  "serde",
  "serde_derive",
+ "serde_json",
  "stellar-base",
  "stellar-horizon",
  "structopt",
  "thiserror",
  "tokio",
+ "url",
 ]
 
 [[package]]

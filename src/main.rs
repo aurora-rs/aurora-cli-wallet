@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate anyhow;
 extern crate tokio;
 #[macro_use]
 extern crate serde_derive;
@@ -15,6 +17,8 @@ mod account;
 mod commands;
 mod config;
 mod error;
+mod horizon;
+mod render;
 
 use crate::commands::OutputFormat;
 use crate::error::Error;
@@ -26,7 +30,7 @@ async fn main() -> Result<()> {
     let mut app = config::load()?;
     let command = commands::Aurora::from_args();
     let mut out = new_output(&command.output)?;
-    commands::run_command(&mut out, &mut app, command.command)
+    commands::run_command(&mut out, &mut app, command.command).await
 }
 
 fn new_output(format: &Option<OutputFormat>) -> Result<Output> {
