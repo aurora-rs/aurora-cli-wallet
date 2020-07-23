@@ -3,6 +3,7 @@ name = "aurora"
 version = "0.1.0"
 authors = ["Francesco Ceccon <francesco@ceccon.me>"]
 edition = "2018"
+publish = false
 
 [dependencies]
 anyhow = "1.0.31"
