@@ -1871,9 +1871,9 @@ dependencies = [
 
 [[package]]
 name = "stellar-horizon"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cbadd9fcf42b50d419bc0e7a27d93f96db9fd0c0039f67ff7730e7e5412101e"
+checksum = "a7239672a10d39d6f4ac44b0610e1ec18ad3edce92fd66ef2abfc0fbf3f1c4a7"
 dependencies = [
  "async-sse",
  "base64 0.12.3",

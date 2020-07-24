@@ -14,6 +14,7 @@ mod account;
 mod ledger;
 mod operation;
 mod server;
+mod transaction;
 
 #[derive(Debug, StructOpt)]
 pub struct Paging {
@@ -50,6 +51,7 @@ pub enum HorizonNonServerCommand {
     Account(account::AccountCommand),
     Ledger(ledger::LedgerCommand),
     Operation(operation::OperationCommand),
+    Transaction(transaction::TransactionCommand),
 }
 
 pub async fn run_command(
@@ -71,6 +73,9 @@ pub async fn run_command(
                 }
                 HorizonNonServerCommand::Operation(cmd) => {
                     operation::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Transaction(cmd) => {
+                    transaction::run_command(&mut out, &config, &client, cmd).await
                 }
             }
         }

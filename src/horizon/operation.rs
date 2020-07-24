@@ -20,7 +20,7 @@ pub enum OperationCommand {
 #[structopt(about = "Retrieves information about a single operation")]
 pub struct SingleOperationCommand {
     #[structopt(name = "OPERATION_ID", help = "The operation id")]
-    pub operation_id: i32,
+    pub operation_id: String,
 }
 
 #[derive(Debug, StructOpt)]
@@ -93,7 +93,7 @@ pub async fn run_single<H>(
 where
     H: HorizonClient,
 {
-    let request = api::ledgers::single(command.operation_id);
+    let request = api::operations::single(command.operation_id);
     execute_and_print_request(&mut out, client, request).await
 }
 
