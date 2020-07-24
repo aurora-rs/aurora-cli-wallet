@@ -5,6 +5,7 @@ use anyhow::Result;
 use convey::Output;
 use serde::ser::Serialize;
 use stellar_horizon::client::HorizonClient;
+use stellar_horizon::error::Error as HorizonError;
 use stellar_horizon::request::{Order, PageRequest, Request, StreamRequest};
 use structopt::StructOpt;
 use tokio::stream::StreamExt;
@@ -102,9 +103,18 @@ where
     R: Request,
     R::Response: Serialize,
 {
-    let (_, response) = client.request(request).await?;
-    out.print(ResponseRender(response)).map_err(Error::Convey)?;
-    Ok(())
+    match client.request(request).await {
+        Ok((_, response)) => {
+            out.print(ResponseRender(response)).map_err(Error::Convey)?;
+            Ok(())
+        }
+        Err(HorizonError::HorizonRequestError(err)) => {
+            out.print(ResponseRender(err.clone()))
+                .map_err(Error::Convey)?;
+            Err(HorizonError::HorizonRequestError(err))?
+        }
+        Err(err) => Err(err)?,
+    }
 }
 
 pub async fn execute_and_print_page_request<H, R>(
