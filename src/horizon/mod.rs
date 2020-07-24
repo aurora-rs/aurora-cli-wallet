@@ -4,6 +4,7 @@ use convey::Output;
 use structopt::StructOpt;
 
 mod account;
+mod ledger;
 mod server;
 
 #[derive(Debug, StructOpt)]
@@ -25,6 +26,7 @@ pub enum HorizonInnerCommand {
 #[derive(Debug, StructOpt)]
 pub enum HorizonNonServerCommand {
     Account(account::AccountCommand),
+    Ledger(ledger::LedgerCommand),
 }
 
 pub async fn run_command(
@@ -40,6 +42,9 @@ pub async fn run_command(
             match cmd {
                 HorizonNonServerCommand::Account(cmd) => {
                     account::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Ledger(cmd) => {
+                    ledger::run_command(&mut out, &config, &client, cmd).await
                 }
             }
         }

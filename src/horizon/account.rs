@@ -1,4 +1,4 @@
-use crate::config::{self, AppConfig, Server};
+use crate::config::AppConfig;
 use crate::error::Error;
 use crate::render::ResponseRender;
 use anyhow::Result;
