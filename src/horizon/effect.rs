@@ -21,13 +21,6 @@ pub enum EffectCommand {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a single transaction")]
-pub struct SingleEffectCommand {
-    #[structopt(name = "TRANSACTION_ID", help = "The transaction id")]
-    pub transaction_id: String,
-}
-
-#[derive(Debug, StructOpt)]
 #[structopt(about = "Retrieves information about a list of transactions")]
 pub struct AllEffectsCommand {
     #[structopt(flatten)]

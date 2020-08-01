@@ -16,6 +16,7 @@ mod effect;
 mod ledger;
 mod operation;
 mod server;
+mod trade;
 mod transaction;
 
 #[derive(Debug, StructOpt)]
@@ -59,6 +60,7 @@ pub enum HorizonNonServerCommand {
     Operation(operation::OperationCommand),
     Transaction(transaction::TransactionCommand),
     Effect(effect::EffectCommand),
+    Trade(trade::TradeCommand),
     Info,
 }
 
@@ -87,6 +89,9 @@ pub async fn run_command(
                 }
                 HorizonNonServerCommand::Effect(cmd) => {
                     effect::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Trade(cmd) => {
+                    trade::run_command(&mut out, &config, &client, cmd).await
                 }
                 HorizonNonServerCommand::Info => {
                     execute_and_print_request(&mut out, &client, api::root::root()).await
