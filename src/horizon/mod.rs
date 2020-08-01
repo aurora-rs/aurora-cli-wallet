@@ -11,6 +11,7 @@ use structopt::StructOpt;
 use tokio::stream::StreamExt;
 
 mod account;
+mod effect;
 mod ledger;
 mod operation;
 mod server;
@@ -26,6 +27,10 @@ pub struct Paging {
     pub ascending: bool,
     #[structopt(long, help = "Return ledgers in descending order", group = "order")]
     pub descending: bool,
+}
+
+#[derive(Debug, StructOpt)]
+pub struct Streaming {
     #[structopt(long, help = "Stream response")]
     pub stream: bool,
 }
@@ -52,6 +57,7 @@ pub enum HorizonNonServerCommand {
     Ledger(ledger::LedgerCommand),
     Operation(operation::OperationCommand),
     Transaction(transaction::TransactionCommand),
+    Effect(effect::EffectCommand),
 }
 
 pub async fn run_command(
@@ -76,6 +82,9 @@ pub async fn run_command(
                 }
                 HorizonNonServerCommand::Transaction(cmd) => {
                     transaction::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Effect(cmd) => {
+                    effect::run_command(&mut out, &config, &client, cmd).await
                 }
             }
         }
@@ -130,13 +139,29 @@ pub async fn execute_and_print_page_request<H, R>(
 ) -> Result<()>
 where
     H: HorizonClient,
+    R: PageRequest + 'static,
+    R::Response: Serialize,
+{
+    request = add_paging_options(request, &paging);
+    execute_and_print_request(&mut out, client, request).await
+}
+
+pub async fn execute_and_print_stream_request<H, R>(
+    mut out: &mut Output,
+    client: &H,
+    mut request: R,
+    paging: &Paging,
+    streaming: &Streaming,
+) -> Result<()>
+where
+    H: HorizonClient,
     R: StreamRequest + PageRequest + 'static,
     R::Response: Serialize,
     R::Resource: Serialize,
 {
     request = add_paging_options(request, &paging);
 
-    if paging.stream {
+    if streaming.stream {
         let mut stream = client.stream(request)?;
         while let Some(event) = stream.try_next().await? {
             out.print(ResponseRender(event)).map_err(Error::Convey)?;

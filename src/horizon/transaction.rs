@@ -1,10 +1,13 @@
 use crate::config::AppConfig;
-use crate::horizon::{execute_and_print_page_request, execute_and_print_request, Paging};
+use crate::horizon::{
+    execute_and_print_request, execute_and_print_stream_request, Paging, Streaming,
+};
 use anyhow::Result;
 use convey::Output;
 use stellar_base::PublicKey;
 use stellar_horizon::api;
 use stellar_horizon::client::HorizonClient;
+use stellar_horizon::resources::LedgerId;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -30,6 +33,8 @@ pub struct AllTransactionsCommand {
     pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
+    #[structopt(flatten)]
+    pub streaming: Streaming,
 }
 
 #[derive(Debug, StructOpt)]
@@ -41,17 +46,21 @@ pub struct TransactionsForAccountCommand {
     pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
+    #[structopt(flatten)]
+    pub streaming: Streaming,
 }
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Retrieves information about a list of transactions filtered by ledger")]
 pub struct TransactionsForLedgerCommand {
     #[structopt(name = "LEDGER_ID", help = "The ledger id")]
-    pub ledger_id: u32,
+    pub ledger_id: LedgerId,
     #[structopt(long, help = "Include failed transactions")]
     pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
+    #[structopt(flatten)]
+    pub streaming: Streaming,
 }
 
 pub async fn run_command<H>(
@@ -83,7 +92,14 @@ where
     H: HorizonClient,
 {
     let request = api::transactions::all().with_include_failed(command.include_failed);
-    execute_and_print_page_request(&mut out, client, request, &command.paging).await
+    execute_and_print_stream_request(
+        &mut out,
+        client,
+        request,
+        &command.paging,
+        &command.streaming,
+    )
+    .await
 }
 
 pub async fn run_single<H>(
@@ -111,7 +127,14 @@ where
     let account = PublicKey::from_account_id(&command.account_id)?;
     let request =
         api::transactions::for_account(&account).with_include_failed(command.include_failed);
-    execute_and_print_page_request(&mut out, client, request, &command.paging).await
+    execute_and_print_stream_request(
+        &mut out,
+        client,
+        request,
+        &command.paging,
+        &command.streaming,
+    )
+    .await
 }
 
 pub async fn run_for_ledger<H>(
@@ -125,5 +148,12 @@ where
 {
     let request = api::transactions::for_ledger(command.ledger_id)
         .with_include_failed(command.include_failed);
-    execute_and_print_page_request(&mut out, client, request, &command.paging).await
+    execute_and_print_stream_request(
+        &mut out,
+        client,
+        request,
+        &command.paging,
+        &command.streaming,
+    )
+    .await
 }

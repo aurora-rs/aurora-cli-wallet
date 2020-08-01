@@ -1,9 +1,12 @@
 use crate::config::AppConfig;
-use crate::horizon::{execute_and_print_page_request, execute_and_print_request, Paging};
+use crate::horizon::{
+    execute_and_print_request, execute_and_print_stream_request, Paging, Streaming,
+};
 use anyhow::Result;
 use convey::Output;
 use stellar_horizon::api;
 use stellar_horizon::client::HorizonClient;
+use stellar_horizon::resources::LedgerId;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -17,7 +20,7 @@ pub enum LedgerCommand {
 #[structopt(about = "Retrieves information about a single ledger")]
 pub struct SingleLedgerCommand {
     #[structopt(name = "LEDGER_ID", help = "The ledger id")]
-    pub ledger_id: i32,
+    pub ledger_id: LedgerId,
 }
 
 #[derive(Debug, StructOpt)]
@@ -25,6 +28,8 @@ pub struct SingleLedgerCommand {
 pub struct AllLedgersCommand {
     #[structopt(flatten)]
     pub paging: Paging,
+    #[structopt(flatten)]
+    pub streaming: Streaming,
 }
 
 pub async fn run_command<H>(
@@ -52,7 +57,14 @@ where
     H: HorizonClient,
 {
     let request = api::ledgers::all();
-    execute_and_print_page_request(&mut out, client, request, &command.paging).await
+    execute_and_print_stream_request(
+        &mut out,
+        client,
+        request,
+        &command.paging,
+        &command.streaming,
+    )
+    .await
 }
 
 pub async fn run_single<H>(
