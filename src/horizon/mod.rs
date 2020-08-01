@@ -4,6 +4,7 @@ use crate::render::ResponseRender;
 use anyhow::Result;
 use convey::Output;
 use serde::ser::Serialize;
+use stellar_horizon::api;
 use stellar_horizon::client::HorizonClient;
 use stellar_horizon::error::Error as HorizonError;
 use stellar_horizon::request::{Order, PageRequest, Request, StreamRequest};
@@ -58,6 +59,7 @@ pub enum HorizonNonServerCommand {
     Operation(operation::OperationCommand),
     Transaction(transaction::TransactionCommand),
     Effect(effect::EffectCommand),
+    Info,
 }
 
 pub async fn run_command(
@@ -85,6 +87,9 @@ pub async fn run_command(
                 }
                 HorizonNonServerCommand::Effect(cmd) => {
                     effect::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Info => {
+                    execute_and_print_request(&mut out, &client, api::root::root()).await
                 }
             }
         }
