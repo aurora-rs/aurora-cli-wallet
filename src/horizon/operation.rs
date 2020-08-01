@@ -1,6 +1,7 @@
 use crate::config::AppConfig;
 use crate::horizon::{
-    execute_and_print_request, execute_and_print_stream_request, Paging, Streaming,
+    execute_and_print_page_request, execute_and_print_request, execute_and_print_stream_request,
+    Paging, Streaming,
 };
 use anyhow::Result;
 use convey::Output;
@@ -17,6 +18,7 @@ pub enum OperationCommand {
     Single(SingleOperationCommand),
     ForAccount(OperationsForAccountCommand),
     ForLedger(OperationsForLedgerCommand),
+    ForTransaction(OperationsForTransactionCommand),
 }
 
 #[derive(Debug, StructOpt)]
@@ -63,6 +65,15 @@ pub struct OperationsForLedgerCommand {
     pub streaming: Streaming,
 }
 
+#[derive(Debug, StructOpt)]
+#[structopt(about = "Retrieves information about a list of operations filtered by transaction")]
+pub struct OperationsForTransactionCommand {
+    #[structopt(name = "TRANSACTION_ID", help = "The transaction id")]
+    pub transaction_id: String,
+    #[structopt(flatten)]
+    pub paging: Paging,
+}
+
 pub async fn run_command<H>(
     mut out: &mut Output,
     config: &AppConfig,
@@ -77,6 +88,9 @@ where
         OperationCommand::Single(cmd) => run_single(&mut out, &config, client, cmd).await,
         OperationCommand::ForAccount(cmd) => run_for_account(&mut out, &config, client, cmd).await,
         OperationCommand::ForLedger(cmd) => run_for_ledger(&mut out, &config, client, cmd).await,
+        OperationCommand::ForTransaction(cmd) => {
+            run_for_transaction(&mut out, &config, client, cmd).await
+        }
     }
 }
 
@@ -154,4 +168,17 @@ where
         &command.streaming,
     )
     .await
+}
+
+pub async fn run_for_transaction<H>(
+    mut out: &mut Output,
+    _config: &AppConfig,
+    client: &H,
+    command: OperationsForTransactionCommand,
+) -> Result<()>
+where
+    H: HorizonClient,
+{
+    let request = api::payments::for_transaction(command.transaction_id);
+    execute_and_print_page_request(&mut out, client, request, &command.paging).await
 }

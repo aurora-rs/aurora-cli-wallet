@@ -15,6 +15,7 @@ mod account;
 mod effect;
 mod ledger;
 mod operation;
+mod payment;
 mod server;
 mod trade;
 mod transaction;
@@ -58,6 +59,7 @@ pub enum HorizonNonServerCommand {
     Account(account::AccountCommand),
     Ledger(ledger::LedgerCommand),
     Operation(operation::OperationCommand),
+    Payment(payment::PaymentCommand),
     Transaction(transaction::TransactionCommand),
     Effect(effect::EffectCommand),
     Trade(trade::TradeCommand),
@@ -83,6 +85,9 @@ pub async fn run_command(
                 }
                 HorizonNonServerCommand::Operation(cmd) => {
                     operation::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::Payment(cmd) => {
+                    payment::run_command(&mut out, &config, &client, cmd).await
                 }
                 HorizonNonServerCommand::Transaction(cmd) => {
                     transaction::run_command(&mut out, &config, &client, cmd).await

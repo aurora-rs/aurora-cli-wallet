@@ -11,18 +11,19 @@ use stellar_horizon::resources::LedgerId;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Horizon effect endpoints")]
-pub enum EffectCommand {
-    All(AllEffectsCommand),
-    ForAccount(EffectsForAccountCommand),
-    ForLedger(EffectsForLedgerCommand),
-    ForOperation(EffectsForOperationCommand),
-    ForTransaction(EffectsForTransactionCommand),
+#[structopt(about = "Horizon payment endpoints")]
+pub enum PaymentCommand {
+    All(AllPaymentsCommand),
+    ForAccount(PaymentsForAccountCommand),
+    ForLedger(PaymentsForLedgerCommand),
+    ForTransaction(PaymentsForTransactionCommand),
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a list of effects")]
-pub struct AllEffectsCommand {
+#[structopt(about = "Retrieves information about a list of payments")]
+pub struct AllPaymentsCommand {
+    #[structopt(long, help = "Include failed payments")]
+    pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
     #[structopt(flatten)]
@@ -30,10 +31,12 @@ pub struct AllEffectsCommand {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a list of effects filtered by account")]
-pub struct EffectsForAccountCommand {
+#[structopt(about = "Retrieves information about a list of payments filtered by account")]
+pub struct PaymentsForAccountCommand {
     #[structopt(name = "ACCOUNT_ID", help = "The account id")]
     pub account_id: String,
+    #[structopt(long, help = "Include failed payments")]
+    pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
     #[structopt(flatten)]
@@ -41,28 +44,19 @@ pub struct EffectsForAccountCommand {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a list of effects filtered by ledger")]
-pub struct EffectsForLedgerCommand {
+#[structopt(about = "Retrieves information about a list of payments filtered by ledger")]
+pub struct PaymentsForLedgerCommand {
     #[structopt(name = "LEDGER_ID", help = "The ledger id")]
     pub ledger_id: LedgerId,
-    #[structopt(flatten)]
-    pub paging: Paging,
-    #[structopt(flatten)]
-    pub streaming: Streaming,
-}
-
-#[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a list of effects filtered by operation")]
-pub struct EffectsForOperationCommand {
-    #[structopt(name = "OPERATION_ID", help = "The ledger id")]
-    pub operation_id: String,
+    #[structopt(long, help = "Include failed payments")]
+    pub include_failed: bool,
     #[structopt(flatten)]
     pub paging: Paging,
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Retrieves information about a list of effects filtered by transaction")]
-pub struct EffectsForTransactionCommand {
+#[structopt(about = "Retrieves information about a list of payments filtered by transaction")]
+pub struct PaymentsForTransactionCommand {
     #[structopt(name = "TRANSACTION_ID", help = "The transaction id")]
     pub transaction_id: String,
     #[structopt(flatten)]
@@ -73,17 +67,16 @@ pub async fn run_command<H>(
     mut out: &mut Output,
     config: &AppConfig,
     client: &H,
-    command: EffectCommand,
+    command: PaymentCommand,
 ) -> Result<()>
 where
     H: HorizonClient,
 {
     match command {
-        EffectCommand::All(cmd) => run_all(&mut out, &config, client, cmd).await,
-        EffectCommand::ForAccount(cmd) => run_for_account(&mut out, &config, client, cmd).await,
-        EffectCommand::ForLedger(cmd) => run_for_ledger(&mut out, &config, client, cmd).await,
-        EffectCommand::ForOperation(cmd) => run_for_operation(&mut out, &config, client, cmd).await,
-        EffectCommand::ForTransaction(cmd) => {
+        PaymentCommand::All(cmd) => run_all(&mut out, &config, client, cmd).await,
+        PaymentCommand::ForAccount(cmd) => run_for_account(&mut out, &config, client, cmd).await,
+        PaymentCommand::ForLedger(cmd) => run_for_ledger(&mut out, &config, client, cmd).await,
+        PaymentCommand::ForTransaction(cmd) => {
             run_for_transaction(&mut out, &config, client, cmd).await
         }
     }
@@ -93,12 +86,12 @@ pub async fn run_all<H>(
     mut out: &mut Output,
     _config: &AppConfig,
     client: &H,
-    command: AllEffectsCommand,
+    command: AllPaymentsCommand,
 ) -> Result<()>
 where
     H: HorizonClient,
 {
-    let request = api::effects::all();
+    let request = api::payments::all().with_include_failed(command.include_failed);
     execute_and_print_stream_request(
         &mut out,
         client,
@@ -113,13 +106,13 @@ pub async fn run_for_account<H>(
     mut out: &mut Output,
     _config: &AppConfig,
     client: &H,
-    command: EffectsForAccountCommand,
+    command: PaymentsForAccountCommand,
 ) -> Result<()>
 where
     H: HorizonClient,
 {
     let account = PublicKey::from_account_id(&command.account_id)?;
-    let request = api::effects::for_account(&account);
+    let request = api::payments::for_account(&account).with_include_failed(command.include_failed);
     execute_and_print_stream_request(
         &mut out,
         client,
@@ -134,32 +127,13 @@ pub async fn run_for_ledger<H>(
     mut out: &mut Output,
     _config: &AppConfig,
     client: &H,
-    command: EffectsForLedgerCommand,
+    command: PaymentsForLedgerCommand,
 ) -> Result<()>
 where
     H: HorizonClient,
 {
-    let request = api::effects::for_ledger(command.ledger_id);
-    execute_and_print_stream_request(
-        &mut out,
-        client,
-        request,
-        &command.paging,
-        &command.streaming,
-    )
-    .await
-}
-
-pub async fn run_for_operation<H>(
-    mut out: &mut Output,
-    _config: &AppConfig,
-    client: &H,
-    command: EffectsForOperationCommand,
-) -> Result<()>
-where
-    H: HorizonClient,
-{
-    let request = api::effects::for_operation(command.operation_id);
+    let request =
+        api::payments::for_ledger(command.ledger_id).with_include_failed(command.include_failed);
     execute_and_print_page_request(&mut out, client, request, &command.paging).await
 }
 
@@ -167,11 +141,11 @@ pub async fn run_for_transaction<H>(
     mut out: &mut Output,
     _config: &AppConfig,
     client: &H,
-    command: EffectsForTransactionCommand,
+    command: PaymentsForTransactionCommand,
 ) -> Result<()>
 where
     H: HorizonClient,
 {
-    let request = api::effects::for_transaction(command.transaction_id);
+    let request = api::payments::for_transaction(command.transaction_id);
     execute_and_print_page_request(&mut out, client, request, &command.paging).await
 }
