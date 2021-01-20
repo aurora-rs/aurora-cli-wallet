@@ -9,7 +9,7 @@ use stellar_horizon::client::HorizonClient;
 use stellar_horizon::error::Error as HorizonError;
 use stellar_horizon::request::{Order, PageRequest, Request, StreamRequest};
 use structopt::StructOpt;
-use tokio::stream::StreamExt;
+use tokio_stream::StreamExt;
 
 mod account;
 mod effect;
