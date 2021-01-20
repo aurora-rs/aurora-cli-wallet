@@ -12,6 +12,7 @@ use structopt::StructOpt;
 use tokio_stream::StreamExt;
 
 mod account;
+mod claimable_balance;
 mod effect;
 mod ledger;
 mod operation;
@@ -57,6 +58,7 @@ pub enum HorizonInnerCommand {
 #[derive(Debug, StructOpt)]
 pub enum HorizonNonServerCommand {
     Account(account::AccountCommand),
+    ClaimableBalance(claimable_balance::ClaimableBalanceCommand),
     Ledger(ledger::LedgerCommand),
     Operation(operation::OperationCommand),
     Payment(payment::PaymentCommand),
@@ -79,6 +81,9 @@ pub async fn run_command(
             match cmd {
                 HorizonNonServerCommand::Account(cmd) => {
                     account::run_command(&mut out, &config, &client, cmd).await
+                }
+                HorizonNonServerCommand::ClaimableBalance(cmd) => {
+                    claimable_balance::run_command(&mut out, &config, &client, cmd).await
                 }
                 HorizonNonServerCommand::Ledger(cmd) => {
                     ledger::run_command(&mut out, &config, &client, cmd).await
